@@ -31,7 +31,7 @@ class ParserSpec extends FlatSpec with Matchers {
     val root =
       <Track>
         <Trackpoint>
-          <Time>2015-10-03T09:38:58.000Z</Time>
+          <Time>2016-04-30T09:38:58.000Z</Time>
           <AltitudeMeters>3.0</AltitudeMeters>
           <DistanceMeters>100.0</DistanceMeters>
           <HeartRateBpm>
@@ -43,16 +43,16 @@ class ParserSpec extends FlatSpec with Matchers {
 
     val result = Parser.parseTrack(root).head
 
-    result.time.toString shouldBe "2015-10-03T09:38:58.000Z"
+    result.time.toString shouldBe "2016-04-30T09:38:58.000Z"
     result.altitudeMeters shouldBe Some(3.0)
     result.distanceMeters shouldBe Some(100.0)
     result.heartRateBpm shouldBe Some(HeartRateBpm(87))
-    result.sensorState shouldBe "Present"
+    result.sensorState shouldBe Some("Present")
   }
 
   it should "parse a Lap" in {
     val root =
-      <Lap StartTime="2015-10-03T09:48:06.375Z">
+      <Lap StartTime="2016-04-30T09:48:06.375Z">
         <TotalTimeSeconds>6.0</TotalTimeSeconds>
         <DistanceMeters>15.5</DistanceMeters>
         <MaximumSpeed>9.69</MaximumSpeed>
@@ -71,14 +71,15 @@ class ParserSpec extends FlatSpec with Matchers {
 
     val result = Parser.parseLaps(root).head
 
-    result.startTime.toString shouldBe "2015-10-03T09:48:06.375Z"
+    result.startTime.toString shouldBe "2016-04-30T09:48:06.375Z"
     result.totalTimeSeconds shouldBe 6.0
     result.distanceMeters shouldBe 15.5
     result.maximumSpeed shouldBe 9.69
     result.calories shouldBe 50
     result.averageHeartRateBpm shouldBe Some(HeartRateBpm(145))
     result.maximumHeartRateBpm shouldBe Some(HeartRateBpm(160))
-    result.intensity shouldBe "Active"
+    result.intensity shouldBe Some("Active")
+    result.notes shouldBe None
     result.triggerMethod shouldBe "Manual"
   }
 
@@ -87,8 +88,8 @@ class ParserSpec extends FlatSpec with Matchers {
     <TrainingCenterDatabase>
       <Activities>
         <Activity Sport="Running">
-          <Id>2015-10-03T09:38:57.000Z</Id>
-          <Lap StartTime="2015-10-03T09:38:57.000Z">
+          <Id>2016-04-30T09:38:57.000Z</Id>
+          <Lap StartTime="2016-04-30T09:38:57.000Z">
             <TotalTimeSeconds>549.0</TotalTimeSeconds>
             <DistanceMeters>1277.699951171875</DistanceMeters>
             <MaximumSpeed>9.79999828338623</MaximumSpeed>
@@ -103,7 +104,7 @@ class ParserSpec extends FlatSpec with Matchers {
             <TriggerMethod>Manual</TriggerMethod>
             <Track>
               <Trackpoint>
-                <Time>2015-10-03T09:38:58.000Z</Time>
+                <Time>2016-04-30T09:38:58.000Z</Time>
                 <AltitudeMeters>3.0</AltitudeMeters>
                 <DistanceMeters>100.0</DistanceMeters>
                 <HeartRateBpm>
@@ -119,7 +120,7 @@ class ParserSpec extends FlatSpec with Matchers {
 
     val result = Parser.parse(root)
 
-    result.activities.head.id.toString shouldBe "2015-10-03T09:38:57.000Z"
+    result.activities.head.id.toString shouldBe "2016-04-30T09:38:57.000Z"
   }
 }
 

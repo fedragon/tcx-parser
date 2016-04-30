@@ -6,14 +6,15 @@ import scala.xml._
 
 case class Position(latitudeDegrees: Double, longitudeDegrees: Double)
 
+case class HeartRateBpm(value: Int)
+
 case class Trackpoint(
   time: DateTime,
   position: Option[Position],
   altitudeMeters: Option[Double],
   distanceMeters: Option[Double],
   heartRateBpm: Option[HeartRateBpm],
-  sensorState: String)
-case class HeartRateBpm(value: Int)
+  sensorState: Option[String])
 
 case class Lap(
   startTime: DateTime,
@@ -23,7 +24,8 @@ case class Lap(
   calories: Long,
   averageHeartRateBpm: Option[HeartRateBpm],
   maximumHeartRateBpm: Option[HeartRateBpm],
-  intensity: String,
+  intensity: Option[String],
+  notes: Option[String],
   triggerMethod: String,
   track: Seq[Trackpoint])
 
@@ -40,7 +42,8 @@ object Parser {
           (activity \ "@Sport").text,
           (activity \ "Id").text,
           parseLaps(activity \ "Lap"))
-      })
+      }
+    )
 
   private[tcxparser] def parseLaps(laps: NodeSeq) =
     laps.map { lap =>
@@ -52,9 +55,11 @@ object Parser {
         (lap \ "Calories").text.toLong,
         optionally(lap \ "AverageHeartRateBpm")(parseHeartRateBpm),
         optionally(lap \ "MaximumHeartRateBpm")(parseHeartRateBpm),
-        (lap \ "Intensity").text,
+        optionally(lap \ "Intensity")(_.text),
+        optionally(lap \ "Notes")(_.text),
         (lap \ "TriggerMethod").text,
-        parseTrack(lap \ "Track"))
+        parseTrack(lap \ "Track")
+      )
     }
 
   private[tcxparser] val parseHeartRateBpm = (heartRateBpm: NodeSeq) =>
@@ -68,13 +73,15 @@ object Parser {
         optionally(point \ "AltitudeMeters")(_.text.toDouble),
         optionally(point \ "DistanceMeters")(_.text.toDouble),
         optionally(point \ "HeartRateBpm")(parseHeartRateBpm),
-        (point \ "SensorState").text)
+        optionally(point \ "SensorState")(_.text)
+      )
     }
 
   private[tcxparser] val parsePosition = (position: NodeSeq) =>
     Position(
       (position \ "LatitudeDegrees").text.toDouble,
-      (position \ "LongitudeDegrees").text.toDouble)
+      (position \ "LongitudeDegrees").text.toDouble
+    )
 
   private def optionally[T](node: NodeSeq)(f: NodeSeq => T) =
     if(node.isEmpty) None
