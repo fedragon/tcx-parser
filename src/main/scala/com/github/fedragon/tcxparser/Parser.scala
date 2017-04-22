@@ -83,7 +83,6 @@ object Parser {
       (position \ "LongitudeDegrees").text.toDouble
     )
 
-  private def optionally[T](node: NodeSeq)(f: NodeSeq => T) =
-    if(node.isEmpty) None
-    else Some(f(node))
+  private[tcxparser] def optionally[T](node: NodeSeq)(f: NodeSeq => T) =
+    Option(node).filter(_.nonEmpty).map(f)
 }

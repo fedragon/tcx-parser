@@ -1,8 +1,17 @@
 package com.github.fedragon.tcxparser
 
 import org.scalatest._
+import scala.xml.NodeSeq
 
 class ParserSpec extends FlatSpec with Matchers {
+
+  "optionally" should "apply function to node, if it exists" in {
+    Parser.optionally(<A>1</A>)(_.text.toInt + 1) shouldBe Some(2)
+  }
+
+  it should "return None when node doesn't exist" in {
+    Parser.optionally(NodeSeq.Empty)(_ => ()) shouldBe None
+  }
 
   "Parser" should "parse a Position" in {
     val root =
