@@ -1,6 +1,6 @@
 name := """tcx-parser"""
 
-organization := "com.github.fedragon"
+organization := "fedragon"
 
 version := "1.0"
 

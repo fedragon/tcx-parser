@@ -1,12 +1,12 @@
-package com.github.fedragon.tcxparser
+package fedragon.tcx
 
 import org.joda.time.DateTime
 import org.scalatest._
 import scala.util._
 import scala.xml.NodeSeq
 
-class ParserSpec extends FreeSpec with Matchers {
-  import Parser._
+class TcxParserSpec extends FreeSpec with Matchers {
+  import TcxParser._
 
   "TCX" - {
     "Position is parsed successfully" in {

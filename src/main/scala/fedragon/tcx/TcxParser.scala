@@ -1,4 +1,4 @@
-package com.github.fedragon.tcxparser
+package fedragon.tcx
 
 import org.joda.time.DateTime
 import scala.util.{Failure, Success, Try}
@@ -35,7 +35,7 @@ case class Activity(sport: String, id: String, laps: Seq[Lap])
 
 case class TrainingCenterDatabase(activities: Seq[Activity])
 
-object Parser {
+object TcxParser {
 
   def parse(path: String): Try[TrainingCenterDatabase] =
     parse(XML.loadFile(path))
@@ -44,7 +44,7 @@ object Parser {
     sequence((root \\ "Activity").map(parseActivity))
       .map(TrainingCenterDatabase(_))
 
-  private[tcxparser] def parseActivity(activity: NodeSeq) =
+  private[tcx] def parseActivity(activity: NodeSeq) =
     for {
       laps <- sequence((activity \ "Lap").map(parseLap))
     } yield Activity(
@@ -52,7 +52,7 @@ object Parser {
       (activity \ "Id").text,
       laps)
 
-  private[tcxparser] def parseLap(lap: NodeSeq) =
+  private[tcx] def parseLap(lap: NodeSeq) =
     for {
       track <- parseTrack(lap \ "Track")
       avg <- optionally(lap \ "AverageHeartRateBpm")(parseHeartRateBpm)
@@ -77,10 +77,10 @@ object Parser {
       (lap \ "TriggerMethod").text,
       track)
 
-  private[tcxparser] def parseHeartRateBpm(heartRateBpm: NodeSeq) =
+  private[tcx] def parseHeartRateBpm(heartRateBpm: NodeSeq) =
     HeartRateBpm((heartRateBpm \ "Value").text.toInt)
 
-  private[tcxparser] def parseTrackpoint(point: NodeSeq) =
+  private[tcx] def parseTrackPoint(point: NodeSeq) =
     for {
       datetime <- Try(DateTime.parse((point \ "Time").text))
       position <- optionally(point \ "Position")(parsePosition)
@@ -96,18 +96,18 @@ object Parser {
       heartRate,
       sensorState)
 
-  private[tcxparser] def parseTrack(track: NodeSeq) =
-    sequence((track \ "Trackpoint").map(parseTrackpoint))
+  private[tcx] def parseTrack(track: NodeSeq) =
+    sequence((track \ "Trackpoint").map(parseTrackPoint))
 
-  private[tcxparser] def parsePosition(position: NodeSeq) =
+  private[tcx] def parsePosition(position: NodeSeq) =
     Position(
       (position \ "LatitudeDegrees").text.toDouble,
       (position \ "LongitudeDegrees").text.toDouble)
 
-  private[tcxparser] def optionally[T](node: NodeSeq)(f: NodeSeq => T) =
+  private[tcx] def optionally[T](node: NodeSeq)(f: NodeSeq => T) =
     Try(Option(node).filter(_.nonEmpty).map(f))
 
-  private[tcxparser] def sequence[T](xs: Seq[Try[T]]): Try[Seq[T]] =
+  private[tcx] def sequence[T](xs: Seq[Try[T]]): Try[Seq[T]] =
     xs
       .find(_.isFailure)
       .map(t => Failure(t.failed.get))
