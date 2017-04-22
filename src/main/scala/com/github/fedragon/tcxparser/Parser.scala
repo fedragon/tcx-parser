@@ -1,10 +1,11 @@
 package com.github.fedragon.tcxparser
 
-import java.io.File
 import org.joda.time.DateTime
 import scala.xml._
 
-case class Position(latitudeDegrees: Double, longitudeDegrees: Double)
+case class Position(
+  latitudeDegrees: Double,
+  longitudeDegrees: Double)
 
 case class HeartRateBpm(value: Int)
 
@@ -35,7 +36,10 @@ case class TrainingCenterDatabase(activities: Seq[Activity])
 
 object Parser {
 
-  def parse(root: NodeSeq) =
+  def parse(fileName: String): TrainingCenterDatabase =
+    parse(XML.loadFile(fileName))
+
+  def parse(root: NodeSeq): TrainingCenterDatabase =
     TrainingCenterDatabase(
       (root \\ "Activity").map { activity =>
         Activity(

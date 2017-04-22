@@ -131,5 +131,10 @@ class ParserSpec extends FlatSpec with Matchers {
 
     result.activities.head.id.toString shouldBe "2016-04-30T09:38:57.000Z"
   }
-}
 
+  it should "parse a whole file" in {
+    val result = Parser.parse(getClass.getResource("/test.xml").getPath)
+
+    result.activities.head.id.toString shouldBe "2016-04-30T09:38:57.000Z"
+  }
+}

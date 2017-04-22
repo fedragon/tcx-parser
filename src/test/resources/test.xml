@@ -1,0 +1,32 @@
+<TrainingCenterDatabase>
+  <Activities>
+    <Activity Sport="Running">
+      <Id>2016-04-30T09:38:57.000Z</Id>
+      <Lap StartTime="2016-04-30T09:38:57.000Z">
+        <TotalTimeSeconds>549.0</TotalTimeSeconds>
+        <DistanceMeters>1277.699951171875</DistanceMeters>
+        <MaximumSpeed>9.79999828338623</MaximumSpeed>
+        <Calories>1467</Calories>
+        <AverageHeartRateBpm>
+          <Value>140</Value>
+        </AverageHeartRateBpm>
+        <MaximumHeartRateBpm>
+          <Value>151</Value>
+        </MaximumHeartRateBpm>
+        <Intensity>Active</Intensity>
+        <TriggerMethod>Manual</TriggerMethod>
+        <Track>
+          <Trackpoint>
+            <Time>2016-04-30T09:38:58.000Z</Time>
+            <AltitudeMeters>3.0</AltitudeMeters>
+            <DistanceMeters>100.0</DistanceMeters>
+            <HeartRateBpm>
+              <Value>87</Value>
+            </HeartRateBpm>
+            <SensorState>Present</SensorState>
+          </Trackpoint>
+        </Track>
+      </Lap>
+    </Activity>
+  </Activities>
+</TrainingCenterDatabase>
