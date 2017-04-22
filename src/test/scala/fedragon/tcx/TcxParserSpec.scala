@@ -5,7 +5,7 @@ import org.scalatest._
 import scala.util._
 import scala.xml.NodeSeq
 
-class TcxParserSpec extends FreeSpec with Matchers {
+class TcxParserSpec extends FreeSpec with Matchers with TryValues {
   import TcxParser._
 
   "TCX" - {
@@ -49,7 +49,7 @@ class TcxParserSpec extends FreeSpec with Matchers {
         Some(HeartRateBpm(87)),
         Some("Present")))
 
-      track shouldEqual Success(expected)
+      track.success.value shouldEqual expected
     }
 
     "Lap is parsed successfully" in {
@@ -82,7 +82,7 @@ class TcxParserSpec extends FreeSpec with Matchers {
         "Manual",
         Seq.empty)
 
-      laps shouldEqual Success(expected)
+      laps.success.value shouldEqual expected
     }
 
     "Activity is parsed successfully" in {
@@ -116,14 +116,14 @@ class TcxParserSpec extends FreeSpec with Matchers {
           </Lap>
         </Activity>)
 
-      activity.map(_.id.toString) shouldBe Success("2016-04-30T09:38:57.000Z")
+      activity.success.value.id shouldEqual "2016-04-30T09:38:57.000Z"
     }
 
     "file is parsed successfully" in {
-      val tcd = parse(getClass.getResource("/test.xml").getPath)
+      val tcd = parse(getClass.getResource("/test.xml").getPath).success.value
 
-      tcd.map(_.activities.size) shouldBe Success(1)
-      tcd.map(_.activities.head.id.toString) shouldBe Success("2016-04-30T09:38:57.000Z")
+      tcd.activities.size shouldEqual 1
+      tcd.activities.head.id shouldEqual "2016-04-30T09:38:57.000Z"
     }
   }
 
@@ -131,7 +131,7 @@ class TcxParserSpec extends FreeSpec with Matchers {
     "flattens a sequence of successful tries in a try of a sequence" in {
       val xs = Seq(Try(1), Try(2))
 
-      sequence(xs) shouldBe Try(Seq(1, 2))
+      sequence(xs) shouldEqual Try(Seq(1, 2))
     }
 
     "first exception in presence of failures" in {
@@ -141,24 +141,21 @@ class TcxParserSpec extends FreeSpec with Matchers {
         ouch,
         Failure(new Exception("whoops")))
 
-      sequence(xs) shouldBe ouch
+      sequence(xs) shouldEqual ouch
     }
   }
 
   "optionally" - {
     "safely applies function to node, if it exists" in {
-      optionally(<A>1</A>)(_.text.toInt + 1) shouldBe Success(Some(2))
+      optionally(<A>1</A>)(_.text.toInt + 1).success.value shouldEqual Some(2)
     }
 
     "returns a successful empty option, if node does not exist" in {
-      optionally(NodeSeq.Empty)(_ => ()) shouldBe Success(None)
+      optionally(NodeSeq.Empty)(_ => ()).success.value shouldEqual None
     }
 
     "returns a failure, if something goes wrong with the function" in {
-      optionally(<A>X</A>)(_.text.toInt + 1) match {
-        case Failure(_) => succeed
-        case other => fail
-      }
+      optionally(<A>X</A>)(_.text.toInt + 1) should be a 'failure
     }
   }
 }
