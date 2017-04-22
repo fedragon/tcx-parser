@@ -1,140 +1,144 @@
 package com.github.fedragon.tcxparser
 
+import org.joda.time.DateTime
 import org.scalatest._
 import scala.xml.NodeSeq
 
-class ParserSpec extends FlatSpec with Matchers {
+class ParserSpec extends FreeSpec with Matchers {
+  import Parser._
 
-  "optionally" should "apply function to node, if it exists" in {
-    Parser.optionally(<A>1</A>)(_.text.toInt + 1) shouldBe Some(2)
-  }
+  "TCX" - {
+    "Position is parsed successfully" in {
+      val root =
+        <Position>
+          <LatitudeDegrees>52.4</LatitudeDegrees>
+          <LongitudeDegrees>4.5</LongitudeDegrees>
+        </Position>
 
-  it should "return None when node doesn't exist" in {
-    Parser.optionally(NodeSeq.Empty)(_ => ()) shouldBe None
-  }
+      parsePosition(root) shouldEqual Position(52.4, 4.5)
+    }
 
-  "Parser" should "parse a Position" in {
-    val root =
-      <Position>
-        <LatitudeDegrees>52.4</LatitudeDegrees>
-        <LongitudeDegrees>4.5</LongitudeDegrees>
-      </Position>
+    "HeartRateBpm is parsed successfully" in {
+      val root =
+        <HeartRateBpm>
+          <Value>154</Value>
+        </HeartRateBpm>
 
-    val result = Parser.parsePosition(root)
+      parseHeartRateBpm(root) shouldEqual HeartRateBpm(154)
+    }
 
-    result shouldBe Position(52.4, 4.5)
-  }
-
-  it should "parse a HeartRateBpm" in {
-    val root =
-      <HeartRateBpm>
-        <Value>154</Value>
-      </HeartRateBpm>
-
-    val result = Parser.parseHeartRateBpm(root)
-
-    result.value shouldBe 154
-  }
-
-  it should "parse a Track" in {
-    val root =
-      <Track>
-        <Trackpoint>
-          <Time>2016-04-30T09:38:58.000Z</Time>
-          <AltitudeMeters>3.0</AltitudeMeters>
-          <DistanceMeters>100.0</DistanceMeters>
-          <HeartRateBpm>
-            <Value>87</Value>
-          </HeartRateBpm>
-          <SensorState>Present</SensorState>
-        </Trackpoint>
-      </Track>
-
-    val result = Parser.parseTrack(root).head
-
-    result.time.toString shouldBe "2016-04-30T09:38:58.000Z"
-    result.altitudeMeters shouldBe Some(3.0)
-    result.distanceMeters shouldBe Some(100.0)
-    result.heartRateBpm shouldBe Some(HeartRateBpm(87))
-    result.sensorState shouldBe Some("Present")
-  }
-
-  it should "parse a Lap" in {
-    val root =
-      <Lap StartTime="2016-04-30T09:48:06.375Z">
-        <TotalTimeSeconds>6.0</TotalTimeSeconds>
-        <DistanceMeters>15.5</DistanceMeters>
-        <MaximumSpeed>9.69</MaximumSpeed>
-        <Calories>50</Calories>
-        <AverageHeartRateBpm>
-          <Value>145</Value>
-        </AverageHeartRateBpm>
-        <MaximumHeartRateBpm>
-          <Value>160</Value>
-        </MaximumHeartRateBpm>
-        <Intensity>Active</Intensity>
-        <TriggerMethod>Manual</TriggerMethod>
+    "Track is parsed successfully" in {
+      val track = parseTrack(
         <Track>
-        </Track>
-      </Lap>
+          <Trackpoint>
+            <Time>2016-04-30T09:38:58.000Z</Time>
+            <AltitudeMeters>3.0</AltitudeMeters>
+            <DistanceMeters>100.0</DistanceMeters>
+            <HeartRateBpm>
+              <Value>87</Value>
+            </HeartRateBpm>
+            <SensorState>Present</SensorState>
+          </Trackpoint>
+        </Track>).head
+      val expected = Trackpoint(
+        DateTime.parse("2016-04-30T09:38:58.000Z"),
+        None,
+        Some(3.0),
+        Some(100.0),
+        Some(HeartRateBpm(87)),
+        Some("Present"))
 
-    val result = Parser.parseLaps(root).head
+      track shouldEqual expected
+    }
 
-    result.startTime.toString shouldBe "2016-04-30T09:48:06.375Z"
-    result.totalTimeSeconds shouldBe 6.0
-    result.distanceMeters shouldBe 15.5
-    result.maximumSpeed shouldBe 9.69
-    result.calories shouldBe 50
-    result.averageHeartRateBpm shouldBe Some(HeartRateBpm(145))
-    result.maximumHeartRateBpm shouldBe Some(HeartRateBpm(160))
-    result.intensity shouldBe Some("Active")
-    result.notes shouldBe None
-    result.triggerMethod shouldBe "Manual"
+    "Lap is parsed successfully" in {
+      val laps = parseLaps(
+        <Lap StartTime="2016-04-30T09:48:06.375Z">
+          <TotalTimeSeconds>6.0</TotalTimeSeconds>
+          <DistanceMeters>15.5</DistanceMeters>
+          <MaximumSpeed>9.69</MaximumSpeed>
+          <Calories>50</Calories>
+          <AverageHeartRateBpm>
+            <Value>145</Value>
+          </AverageHeartRateBpm>
+          <MaximumHeartRateBpm>
+            <Value>160</Value>
+          </MaximumHeartRateBpm>
+          <Intensity>Active</Intensity>
+          <TriggerMethod>Manual</TriggerMethod>
+          <Track></Track>
+        </Lap>)
+      val expected = Lap(
+        DateTime.parse("2016-04-30T09:48:06.375Z"),
+        6.0,
+        15.5,
+        9.69,
+        50,
+        Some(HeartRateBpm(145)),
+        Some(HeartRateBpm(160)),
+        Some("Active"),
+        None,
+        "Manual",
+        Seq.empty)
+
+      laps.size shouldBe 1
+      laps.head shouldEqual expected
+    }
+
+    "Activity is parsed successfully" in {
+      val tcd = parse(
+        <TrainingCenterDatabase>
+          <Activities>
+            <Activity Sport="Running">
+              <Id>2016-04-30T09:38:57.000Z</Id>
+              <Lap StartTime="2016-04-30T09:38:57.000Z">
+                <TotalTimeSeconds>549.0</TotalTimeSeconds>
+                <DistanceMeters>1277.699951171875</DistanceMeters>
+                <MaximumSpeed>9.79999828338623</MaximumSpeed>
+                <Calories>1467</Calories>
+                <AverageHeartRateBpm>
+                  <Value>140</Value>
+                </AverageHeartRateBpm>
+                <MaximumHeartRateBpm>
+                  <Value>151</Value>
+                </MaximumHeartRateBpm>
+                <Intensity>Active</Intensity>
+                <TriggerMethod>Manual</TriggerMethod>
+                <Track>
+                  <Trackpoint>
+                    <Time>2016-04-30T09:38:58.000Z</Time>
+                    <AltitudeMeters>3.0</AltitudeMeters>
+                    <DistanceMeters>100.0</DistanceMeters>
+                    <HeartRateBpm>
+                      <Value>87</Value>
+                    </HeartRateBpm>
+                    <SensorState>Present</SensorState>
+                  </Trackpoint>
+                </Track>
+              </Lap>
+            </Activity>
+          </Activities>
+        </TrainingCenterDatabase>)
+
+      tcd.activities.size shouldBe 1
+      tcd.activities.head.id.toString shouldBe "2016-04-30T09:38:57.000Z"
+    }
+
+    "file is parsed successfully" in {
+      val tcd = parse(getClass.getResource("/test.xml").getPath)
+
+      tcd.activities.size shouldBe 1
+      tcd.activities.head.id.toString shouldBe "2016-04-30T09:38:57.000Z"
+    }
   }
 
-  it should "parse an Activity" in {
-    val root =
-    <TrainingCenterDatabase>
-      <Activities>
-        <Activity Sport="Running">
-          <Id>2016-04-30T09:38:57.000Z</Id>
-          <Lap StartTime="2016-04-30T09:38:57.000Z">
-            <TotalTimeSeconds>549.0</TotalTimeSeconds>
-            <DistanceMeters>1277.699951171875</DistanceMeters>
-            <MaximumSpeed>9.79999828338623</MaximumSpeed>
-            <Calories>1467</Calories>
-            <AverageHeartRateBpm>
-              <Value>140</Value>
-            </AverageHeartRateBpm>
-            <MaximumHeartRateBpm>
-              <Value>151</Value>
-            </MaximumHeartRateBpm>
-            <Intensity>Active</Intensity>
-            <TriggerMethod>Manual</TriggerMethod>
-            <Track>
-              <Trackpoint>
-                <Time>2016-04-30T09:38:58.000Z</Time>
-                <AltitudeMeters>3.0</AltitudeMeters>
-                <DistanceMeters>100.0</DistanceMeters>
-                <HeartRateBpm>
-                  <Value>87</Value>
-                </HeartRateBpm>
-                <SensorState>Present</SensorState>
-              </Trackpoint>
-            </Track>
-          </Lap>
-        </Activity>
-      </Activities>
-    </TrainingCenterDatabase>
+  "optionally" - {
+    "applies function to node, if it exists" in {
+      optionally(<A>1</A>)(_.text.toInt + 1) shouldBe Some(2)
+    }
 
-    val result = Parser.parse(root)
-
-    result.activities.head.id.toString shouldBe "2016-04-30T09:38:57.000Z"
-  }
-
-  it should "parse a whole file" in {
-    val result = Parser.parse(getClass.getResource("/test.xml").getPath)
-
-    result.activities.head.id.toString shouldBe "2016-04-30T09:38:57.000Z"
+    "returns None when it doesn't exist" in {
+      optionally(NodeSeq.Empty)(_ => ()) shouldBe None
+    }
   }
 }
