@@ -62,7 +62,7 @@ object Parser {
       )
     }
 
-  private[tcxparser] val parseHeartRateBpm = (heartRateBpm: NodeSeq) =>
+  private[tcxparser] def parseHeartRateBpm(heartRateBpm: NodeSeq) =
     HeartRateBpm((heartRateBpm \ "Value").text.toInt)
 
   private[tcxparser] def parseTrack(track: NodeSeq) =
@@ -77,7 +77,7 @@ object Parser {
       )
     }
 
-  private[tcxparser] val parsePosition = (position: NodeSeq) =>
+  private[tcxparser] def parsePosition(position: NodeSeq) =
     Position(
       (position \ "LatitudeDegrees").text.toDouble,
       (position \ "LongitudeDegrees").text.toDouble
